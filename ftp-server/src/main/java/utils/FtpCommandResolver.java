@@ -2,8 +2,10 @@ package utils;
 
 public class FtpCommandResolver {
 
+    private String currentWorkingDirectory = "/";
+
     public String resolve(String line) {
-        return null;
+        return "Hello World";
     }
 
 }

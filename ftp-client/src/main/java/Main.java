@@ -65,6 +65,21 @@ public class Main {
             e.printStackTrace();
         }
 
+        while(true) {
+            System.out.print("ftp > ");
+            String command = scanner.nextLine();
+            try {
+                byte[] encryptedCommand = RsaUtils.encryptWithPublicKey(command, serverPublicKey);
+                ReaderAndWriter.write(encryptedCommand, outputStream);
+                byte[] responseEncrypted = ReaderAndWriter.read(inputStream);
+                byte[] responseBytes = RsaUtils.decryptWithPrivateKey(responseEncrypted, clientPrivateKey);
+                String reponse = new String(responseBytes);
+                System.out.println(reponse);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 }

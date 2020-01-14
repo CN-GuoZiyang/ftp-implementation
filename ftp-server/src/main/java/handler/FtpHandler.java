@@ -1,5 +1,6 @@
 package handler;
 
+import utils.FtpCommandResolver;
 import utils.ReaderAndWriter;
 import utils.RsaUtils;
 
@@ -52,15 +53,17 @@ public class FtpHandler implements Runnable {
             e.printStackTrace();
         }
 
-//        FtpCommandResolver resolver = new FtpCommandResolver();
-//        while (true) {
-//            try {
-//                String encryptedCommandLine = bufferedReader.readLine();
-//                String commandLine = new String(RsaUtils.decryptWithPrivateKey(encryptedCommandLine, serverPrivateKey));
-//                resolver.resolve(commandLine);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
+        FtpCommandResolver resolver = new FtpCommandResolver();
+        while (true) {
+            try {
+                byte[] bytesEncrypted = ReaderAndWriter.read(inputStream);
+                byte[] requestBytes = RsaUtils.decryptWithPrivateKey(bytesEncrypted, serverPrivateKey);
+                String response = resolver.resolve(new String(requestBytes));
+                byte[] responseBytes = RsaUtils.encryptWithPublicKey(response, clientPublicKey);
+                ReaderAndWriter.write(responseBytes, outputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
