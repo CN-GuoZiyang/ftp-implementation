@@ -13,14 +13,16 @@ import java.security.interfaces.RSAPublicKey;
 public class FtpHandler implements Runnable {
 
     private Socket socket;
+    private String rootDir;
     private InputStream inputStream;
     private OutputStream outputStream;
     private RSAPrivateKey serverPrivateKey;
     private RSAPublicKey serverPublicKey;
     private RSAPublicKey clientPublicKey;
 
-    public FtpHandler(Socket socket) {
+    public FtpHandler(Socket socket, String rootDir) {
         this.socket = socket;
+        this.rootDir = rootDir;
     }
 
     public void run() {
@@ -53,7 +55,7 @@ public class FtpHandler implements Runnable {
             e.printStackTrace();
         }
 
-        FtpCommandResolver resolver = new FtpCommandResolver();
+        FtpCommandResolver resolver = new FtpCommandResolver(rootDir);
         while (true) {
             try {
                 byte[] bytesEncrypted = ReaderAndWriter.read(inputStream);
