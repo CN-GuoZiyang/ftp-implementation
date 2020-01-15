@@ -1,3 +1,4 @@
+import utils.FileTransfer;
 import utils.ReaderAndWriter;
 import utils.RsaUtils;
 
@@ -71,6 +72,17 @@ public class Main {
             try {
                 byte[] encryptedCommand = RsaUtils.encryptWithPublicKey(command, serverPublicKey);
                 ReaderAndWriter.write(encryptedCommand, outputStream);
+                if(command.startsWith("put")) {
+                    String[] splits = command.split(" ");
+                    File file = new File(splits[1]);
+                    if(!file.exists()) {
+                        System.out.println(splits[1] + " does not exists!");
+                    } else if(file.isDirectory()) {
+                        System.out.println(splits[1] + " is a directory!");
+                    } else {
+                        FileTransfer.putFile(file, inputStream, outputStream, serverPublicKey);
+                    }
+                }
                 byte[] responseEncrypted = ReaderAndWriter.read(inputStream);
                 byte[] responseBytes = RsaUtils.decryptWithPrivateKey(responseEncrypted, clientPrivateKey);
                 String response = new String(responseBytes);

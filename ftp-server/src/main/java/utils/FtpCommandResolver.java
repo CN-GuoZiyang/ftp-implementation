@@ -1,18 +1,31 @@
 package utils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 public class FtpCommandResolver {
 
     private String actualDirectory;
     private String rootDirectory;
+    private InputStream inputStream;
+    private OutputStream outputStream;
+    private RSAPublicKey clientPublicKey;
+    private RSAPrivateKey serverPrivateKey;
 
-    public  FtpCommandResolver(String actualDirectory) {
+    public FtpCommandResolver(String actualDirectory, InputStream inputStream, OutputStream outputStream, RSAPublicKey clientPublicKey, RSAPrivateKey serverPrivateKey) {
         this.actualDirectory = actualDirectory;
         this.rootDirectory = actualDirectory;
+        this.inputStream = inputStream;
+        this.outputStream = outputStream;
+        this.clientPublicKey = clientPublicKey;
+        this.serverPrivateKey = serverPrivateKey;
     }
 
-    public String resolve(String line) {
+    public String resolve(String line) throws IOException {
         if("ls".equals(line)) {
 
             File dir = new File(actualDirectory);
@@ -94,7 +107,7 @@ public class FtpCommandResolver {
             }
             targetDir = new File(targetDirStr);
             if(!targetDir.exists()) {
-                return line.split(" ")[1] + " not exists!";
+                return line.split(" ")[1] + " does not exist!";
             }
             if(!targetDir.isDirectory()) {
                 return line.split(" ")[1] + " is not a directory!";
@@ -107,6 +120,37 @@ public class FtpCommandResolver {
 
         } else if(line.equals("bye")) {
             return "bye";
+        } else if(line.startsWith("put")) {
+
+            String[] splits = line.split(" ");
+            String targetFileStr;
+            if(splits.length == 2) {
+                if(splits[1].contains("/")) {
+                    targetFileStr = splits[1].substring(splits[1].lastIndexOf("/") + 1);
+                } else {
+                    targetFileStr = splits[1];
+                }
+                targetFileStr = actualDirectory + targetFileStr;
+            } else {
+                targetFileStr = splits[2];
+                if(targetFileStr.startsWith("./")) {
+                    targetFileStr = actualDirectory + targetFileStr.substring(1);
+                } else if(targetFileStr.startsWith("../")) {
+                    targetFileStr = targetFileStr.substring(3);
+                    int lastSlash = actualDirectory.substring(0, actualDirectory.length()-1).lastIndexOf("/");
+                    targetFileStr = actualDirectory.substring(0, lastSlash+1) + targetFileStr;
+                } else {
+                    targetFileStr = actualDirectory + targetFileStr;
+                }
+            }
+            File targetFile = new File(targetFileStr);
+            byte[] bytes = RsaUtils.encryptWithPublicKey("Ready", clientPublicKey);
+            ReaderAndWriter.write(bytes, outputStream);
+            FileTransfer.getFile(targetFile, inputStream, serverPrivateKey);
+            return "";
+
+        } else if(line.startsWith("get")) {
+
         }
         return "Known command!";
     }

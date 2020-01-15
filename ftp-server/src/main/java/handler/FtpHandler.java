@@ -55,12 +55,13 @@ public class FtpHandler implements Runnable {
             e.printStackTrace();
         }
 
-        FtpCommandResolver resolver = new FtpCommandResolver(rootDir);
+        FtpCommandResolver resolver = new FtpCommandResolver(rootDir, inputStream, outputStream, clientPublicKey, serverPrivateKey);
         while (true) {
             try {
                 byte[] bytesEncrypted = ReaderAndWriter.read(inputStream);
                 byte[] requestBytes = RsaUtils.decryptWithPrivateKey(bytesEncrypted, serverPrivateKey);
-                String response = resolver.resolve(new String(requestBytes));
+                String command = new String(requestBytes);
+                String response = resolver.resolve(command);
                 byte[] responseBytes = RsaUtils.encryptWithPublicKey(response, clientPublicKey);
                 ReaderAndWriter.write(responseBytes, outputStream);
                 if("bye".equals(response)) {
@@ -68,6 +69,7 @@ public class FtpHandler implements Runnable {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                break;
             }
         }
     }
