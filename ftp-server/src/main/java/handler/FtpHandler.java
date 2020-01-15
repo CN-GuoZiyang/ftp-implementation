@@ -63,6 +63,9 @@ public class FtpHandler implements Runnable {
                 String response = resolver.resolve(new String(requestBytes));
                 byte[] responseBytes = RsaUtils.encryptWithPublicKey(response, clientPublicKey);
                 ReaderAndWriter.write(responseBytes, outputStream);
+                if("bye".equals(response)) {
+                    break;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -73,8 +73,11 @@ public class Main {
                 ReaderAndWriter.write(encryptedCommand, outputStream);
                 byte[] responseEncrypted = ReaderAndWriter.read(inputStream);
                 byte[] responseBytes = RsaUtils.decryptWithPrivateKey(responseEncrypted, clientPrivateKey);
-                String reponse = new String(responseBytes);
-                System.out.println(reponse);
+                String response = new String(responseBytes);
+                if(response.length() != 0) System.out.println(response);
+                if("bye".equals(response)) {
+                    break;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
