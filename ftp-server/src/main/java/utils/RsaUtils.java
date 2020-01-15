@@ -49,6 +49,17 @@ public class RsaUtils {
         return null;
     }
 
+    public static byte[] encryptWithPublicKey(byte[] content, RSAPublicKey publicKey) {
+        try {
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            return cipher.doFinal(content);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static byte[] decryptWithPrivateKey(byte[] content, RSAPrivateKey privateKey) {
         try {
             Cipher cipher = Cipher.getInstance("RSA");

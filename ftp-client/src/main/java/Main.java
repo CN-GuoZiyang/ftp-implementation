@@ -82,6 +82,8 @@ public class Main {
                     } else {
                         FileTransfer.putFile(file, inputStream, outputStream, serverPublicKey);
                     }
+                } else if(command.startsWith("get")) {
+                    handleGet(command);
                 }
                 byte[] responseEncrypted = ReaderAndWriter.read(inputStream);
                 byte[] responseBytes = RsaUtils.decryptWithPrivateKey(responseEncrypted, clientPrivateKey);
@@ -95,6 +97,25 @@ public class Main {
             }
         }
 
+    }
+
+    public static void handleGet(String command) throws IOException {
+        String[] splits = command.split(" ");
+        String targetFileStr;
+        if(splits.length == 2) {
+            targetFileStr = splits[1].substring(splits[1].lastIndexOf("/") + 1);
+        } else {
+            if(splits[2].endsWith("/")) {
+                targetFileStr = splits[2] + splits[1].substring(splits[1].lastIndexOf("/") + 1);
+            } else {
+                targetFileStr = splits[2];
+                if(new File(targetFileStr).isDirectory()) {
+                    targetFileStr = splits[2] + "/" + splits[1].substring(splits[1].lastIndexOf("/") + 1);
+                }
+            }
+        }
+        File targetFile = new File(targetFileStr);
+        FileTransfer.getFile(targetFile, inputStream, clientPrivateKey);
     }
 
 }

@@ -133,8 +133,10 @@ public class FtpCommandResolver {
                 targetFileStr = actualDirectory + targetFileStr;
             } else {
                 targetFileStr = splits[2];
-                if(targetFileStr.startsWith("./")) {
-                    targetFileStr = actualDirectory + targetFileStr.substring(1);
+                if(targetFileStr.startsWith("/")) {
+                    targetFileStr = rootDirectory + targetFileStr.substring(1);
+                } else if(targetFileStr.startsWith("./")) {
+                    targetFileStr = actualDirectory + targetFileStr.substring(2);
                 } else if(targetFileStr.startsWith("../")) {
                     targetFileStr = targetFileStr.substring(3);
                     int lastSlash = actualDirectory.substring(0, actualDirectory.length()-1).lastIndexOf("/");
@@ -151,8 +153,34 @@ public class FtpCommandResolver {
 
         } else if(line.startsWith("get")) {
 
+            String[] splits = line.split(" ");
+            String targetFileStr = splits[1];
+            if(targetFileStr.startsWith("/")) {
+                targetFileStr = rootDirectory + targetFileStr.substring(1);
+            } else if(targetFileStr.startsWith("./")) {
+                targetFileStr = actualDirectory + targetFileStr.substring(2);
+            } else if(targetFileStr.startsWith("../")) {
+                targetFileStr = targetFileStr.substring(3);
+                int lastSlash = actualDirectory.substring(0, actualDirectory.length()-1).lastIndexOf("/");
+                targetFileStr = actualDirectory.substring(0, lastSlash+1) + targetFileStr;
+            } else {
+                targetFileStr = actualDirectory + targetFileStr;
+            }
+            File targetFile = new File(targetFileStr);
+            if(!targetFile.exists()) {
+                ReaderAndWriter.write(RsaUtils.encryptWithPublicKey(splits[1] + " does not exists!", clientPublicKey), outputStream);
+                return "";
+            } else if(targetFile.isDirectory()) {
+                ReaderAndWriter.write(RsaUtils.encryptWithPublicKey(splits[1] + "  is a directory!", clientPublicKey), outputStream);
+                return "";
+            } else {
+                ReaderAndWriter.write(RsaUtils.encryptWithPublicKey("Ready", clientPublicKey), outputStream);
+                FileTransfer.putFile(targetFile, outputStream, clientPublicKey);
+                return "";
+            }
+
         }
-        return "Known command!";
+        return "Unknown command!";
     }
 
 }
